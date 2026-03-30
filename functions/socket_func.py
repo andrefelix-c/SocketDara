@@ -2,6 +2,7 @@ import flet as ft
 import socket
 import threading
 import time
+import asyncio
 
 def iniciar_conexao(servidor, IP: str, Port: int):
     # Força a exibição imediata para sabermos que a função FOI chamada
@@ -63,10 +64,11 @@ def conectar_em_background(page: ft.Page, on_click):
             status_text.color = "green"
 
             if not page.session.store.get("thread_iniciada"):
-                threading.Thread(
-                    target=wait_for_client, 
-                    args=(page, on_click),
-                    daemon=True).start()
+                page.run_task(wait_for_client, page, on_click)
+                # threading.Thread(
+                #     target=wait_for_client, 
+                #     args=(page, on_click),
+                #     daemon=True).start()
                 page.session.store.set("thread_iniciada", True)    
 
             try:
@@ -81,7 +83,7 @@ def conectar_em_background(page: ft.Page, on_click):
     except Exception as e:
         print(f"Erro capturado na thread de conexão: {e}")
 
-def wait_for_client(page: ft.Page, on_click):
+async def wait_for_client(page: ft.Page, on_click):
 
     socket_ativo = page.session.store.get("socket_ativo")
     servidor = page.session.store.get("sou_servidor")
@@ -93,10 +95,15 @@ def wait_for_client(page: ft.Page, on_click):
     meu_turno = page.session.store.get("meu_turno")
     tabuleiro_logico = page.session.store.get("tabuleiro_logico")
     pecas_colocadas = page.session.store.get("pecas_colocadas")
+
+    loop = asyncio.get_event_loop()
     
     while True:
         try:
-            raw_data = socket_ativo.recv(1024).decode('utf-8')
+            # raw_data = socket_ativo.recv(1024).decode('utf-8')
+            raw_data = await loop.run_in_executor(
+                None, lambda: socket_ativo.recv(1024).decode('utf-8')
+            )
             if not raw_data: break         
             
             for data in raw_data.split('\n'):

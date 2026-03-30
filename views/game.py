@@ -1,10 +1,19 @@
 import flet as ft
 import socket
 import threading
+import time
 
 from functions.socket_func import conectar_em_background, wait_for_client
 from functions.game_logic_func import on_cell_click, send_chat
 from functions.utils_func import iniciar_variaveis, abrir_confirmacao_desistencia
+
+def auto_update(page: ft.Page):
+    while True:
+        time.sleep(0.1)
+        try:
+            page.update()
+        except:
+            break
 
 def game_view(page: ft.Page, on_click):
 
@@ -32,6 +41,8 @@ def game_view(page: ft.Page, on_click):
         target=conectar_em_background, 
         args=(page, on_click), 
         daemon=True).start()
+    
+    threading.Thread(target=auto_update, args=(page,), daemon=True).start()
         
     
     return ft.View(
@@ -50,10 +61,6 @@ def game_view(page: ft.Page, on_click):
             ft.Divider(),
             ft.Container(chat_messages, expand=True, bgcolor=ft.Colors.BLACK12, padding=10, border_radius=10, width=float('inf')),
             ft.Row([chat_input, ft.IconButton(ft.Icons.SEND, on_click=lambda e: send_chat(e, page))]),
-            ft.Button(
-                "Voltar",
-                on_click=on_click
-            )
         ],
     )
     
