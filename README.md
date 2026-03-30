@@ -84,11 +84,6 @@ Como aplicativo desktop:
 flet run main.py
 ```
 
-Como aplicativo web (abre no navegador):
-```bash
-flet run main.py --web
-```
-
 ---
 
 ### Iniciando uma partida
